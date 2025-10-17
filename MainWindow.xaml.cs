@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
 using System.IO;
 using System.Windows;
+using System.Collections.Generic;
 
 namespace PromptContextGenerator
 {
@@ -32,34 +33,74 @@ namespace PromptContextGenerator
             _configuration.GetSection("AzureOpenAI").Bind(_azureOpenAISettings);
         }
 
-        private void GenerateButton_Click(object sender, RoutedEventArgs e)
+        private async void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
-            var endpoint = new Uri(_azureOpenAISettings.Endpoint);
-            var deploymentName = _azureOpenAISettings.DeploymentName;
-            var apiKey = _azureOpenAISettings.ApiKey;
-
-            AzureOpenAIClient azureClient = new(
-                endpoint,
-                new AzureKeyCredential(apiKey));
-            ChatClient chatClient = azureClient.GetChatClient(deploymentName);
-
-            var requestOptions = new ChatCompletionOptions()
+            // Get user input
+            var userMessage = userInput.Text.Trim();
+            if (string.IsNullOrEmpty(userMessage))
             {
-                Temperature = 0.7f,
-                TopP = 1.0f,
-                FrequencyPenalty = 0.0f,
-                PresencePenalty = 0.0f,
+                MessageBox.Show("Please enter a message.", "Input Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-            };
+            try
+            {
+                // Disable the generate button while processing
+                GenerateButton.IsEnabled = false;
+                GenerateButton.Content = "Generating...";
 
-            List<ChatMessage> messages =
-            [
-                new SystemChatMessage("You are a helpful assistant."),
-                new UserChatMessage("I am going to Paris, what should I see?"),
-            ];
+                var endpoint = new Uri(_azureOpenAISettings.Endpoint);
+                var deploymentName = _azureOpenAISettings.DeploymentName;
+                var apiKey = _azureOpenAISettings.ApiKey;
 
-            var response = chatClient.CompleteChat(messages, requestOptions);
-            System.Console.WriteLine(response.Value.Content[0].Text);
+                AzureOpenAIClient azureClient = new(
+                    endpoint,
+                    new AzureKeyCredential(apiKey));
+                ChatClient chatClient = azureClient.GetChatClient(deploymentName);
+
+                var requestOptions = new ChatCompletionOptions()
+                {
+                    Temperature = 0.7f,
+                    TopP = 1.0f,
+                    FrequencyPenalty = 0.0f,
+                    PresencePenalty = 0.0f,
+                };
+
+                List<ChatMessage> messages =
+                [
+                    new SystemChatMessage("You are a helpful assistant."),
+                    new UserChatMessage(userMessage),
+                ];
+
+                var response = await chatClient.CompleteChatAsync(messages, requestOptions);
+                var responseText = response.Value.Content[0].Text;
+
+                // Append to results textbox
+                if (!string.IsNullOrEmpty(results.Text))
+                {
+                    results.Text += "\n\n";
+                }
+                results.Text += $"User: {userMessage}\n\nAssistant: {responseText}";
+                
+                // Scroll to bottom
+                results.ScrollToEnd();
+
+                // Clear the input textbox for next input
+                userInput.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Re-enable the generate button
+                GenerateButton.IsEnabled = true;
+                GenerateButton.Content = "Generate";
+                
+                // Focus back to input textbox
+                userInput.Focus();
+            }
         }
     }
 }
