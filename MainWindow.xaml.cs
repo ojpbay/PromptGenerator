@@ -5,6 +5,7 @@ using OpenAI.Chat;
 using System.IO;
 using System.Windows;
 using System.Collections.Generic;
+using System.Windows.Media.Animation;
 
 namespace PromptContextGenerator
 {
@@ -15,6 +16,7 @@ namespace PromptContextGenerator
     {
         private readonly IConfiguration _configuration;
         private readonly AzureOpenAISettings _azureOpenAISettings;
+        private Storyboard _spinnerStoryboard;
 
         public MainWindow()
         {
@@ -31,6 +33,52 @@ namespace PromptContextGenerator
             // Bind Azure OpenAI settings
             _azureOpenAISettings = new AzureOpenAISettings();
             _configuration.GetSection("AzureOpenAI").Bind(_azureOpenAISettings);
+            
+            // Initialize spinner animation
+            InitializeSpinnerAnimation();
+        }
+
+        private void InitializeSpinnerAnimation()
+        {
+            // Create the rotation animation for the button spinner
+            var rotationAnimation = new DoubleAnimation
+            {
+                From = 0,
+                To = 360,
+                Duration = TimeSpan.FromSeconds(1),
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+
+            _spinnerStoryboard = new Storyboard();
+            _spinnerStoryboard.Children.Add(rotationAnimation);
+            Storyboard.SetTargetName(rotationAnimation, "buttonSpinnerRotation");
+            Storyboard.SetTargetProperty(rotationAnimation, new PropertyPath("Angle"));
+        }
+
+        private void ShowButtonSpinner()
+        {
+            // Hide normal text and show loading content
+            buttonText.Visibility = Visibility.Collapsed;
+            loadingContent.Visibility = Visibility.Visible;
+            
+            // Disable button
+            GenerateButton.IsEnabled = false;
+            
+            // Start spinner animation
+            _spinnerStoryboard.Begin(this);
+        }
+
+        private void HideButtonSpinner()
+        {
+            // Stop spinner animation
+            _spinnerStoryboard.Stop(this);
+            
+            // Show normal text and hide loading content
+            buttonText.Visibility = Visibility.Visible;
+            loadingContent.Visibility = Visibility.Collapsed;
+            
+            // Re-enable button
+            GenerateButton.IsEnabled = true;
         }
 
         private async void GenerateButton_Click(object sender, RoutedEventArgs e)
@@ -45,9 +93,7 @@ namespace PromptContextGenerator
 
             try
             {
-                // Disable the generate button while processing
-                GenerateButton.IsEnabled = false;
-                GenerateButton.Content = "Generating...";
+                ShowButtonSpinner();
 
                 var endpoint = new Uri(_azureOpenAISettings.Endpoint);
                 var deploymentName = _azureOpenAISettings.DeploymentName;
@@ -94,9 +140,7 @@ namespace PromptContextGenerator
             }
             finally
             {
-                // Re-enable the generate button
-                GenerateButton.IsEnabled = true;
-                GenerateButton.Content = "Generate";
+                HideButtonSpinner();
                 
                 // Focus back to input textbox
                 userInput.Focus();

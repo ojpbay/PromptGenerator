@@ -12,6 +12,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
+        <!-- Top row with input textbox and generate button -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -26,13 +27,51 @@
                      Text="I am going to Paris, what should I see?"/>
             
             <Button x:Name="GenerateButton"
-                    Content="Generate" 
                     Grid.Column="1"
-                    Width="100" 
-                    Height="30" 
-                    Click="GenerateButton_Click" />
+                    Width="120" 
+                    Height="30"
+					Background="#0078D7"
+					Foreground="White"
+                    Click="GenerateButton_Click">
+                <Button.Content>
+                    <Grid>
+                        <!-- Normal button content -->
+                        <TextBlock x:Name="buttonText" 
+                                   Text="Generate" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"/>
+                        
+                        <!-- Loading content -->
+                        <StackPanel x:Name="loadingContent" 
+                                    Orientation="Horizontal" 
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Center"
+                                    Visibility="Collapsed">
+
+                            <!-- Small spinning circle -->
+                            <Grid Width="14" Height="14" Margin="0,0,8,0">
+                                <Ellipse Width="14" Height="14"
+                                         Stroke="White"
+                                         StrokeThickness="2"
+                                         StrokeDashArray="10,3"
+                                         RenderTransformOrigin="0.5,0.5">
+                                    <Ellipse.RenderTransform>
+                                        <RotateTransform x:Name="buttonSpinnerRotation"/>
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Grid>
+                            
+                            <!-- Loading text -->
+                            <TextBlock Text="Loading..." 
+                                       Foreground="Gray"
+                                       FontSize="12"/>
+                        </StackPanel>
+                    </Grid>
+                </Button.Content>
+            </Button>
         </Grid>
         
+        <!-- Results textbox that fills the remaining space -->
         <TextBox x:Name="results"
                  Grid.Row="1"
                  AcceptsReturn="True"
