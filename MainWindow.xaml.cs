@@ -1,6 +1,8 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
+using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
+using System.IO;
 using System.Windows;
 
 namespace PromptContextGenerator
@@ -10,16 +12,31 @@ namespace PromptContextGenerator
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly IConfiguration _configuration;
+        private readonly AzureOpenAISettings _azureOpenAISettings;
+
         public MainWindow()
         {
             InitializeComponent();
+            
+            // Build configuration with local settings taking precedence
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+            
+            _configuration = builder.Build();
+            
+            // Bind Azure OpenAI settings
+            _azureOpenAISettings = new AzureOpenAISettings();
+            _configuration.GetSection("AzureOpenAI").Bind(_azureOpenAISettings);
         }
 
         private void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
-            var endpoint = new Uri("https://semantickernel-resource.cognitiveservices.azure.com/");
-            var deploymentName = "gpt-4.1-mini";
-            var apiKey = "<your-api-key>";
+            var endpoint = new Uri(_azureOpenAISettings.Endpoint);
+            var deploymentName = _azureOpenAISettings.DeploymentName;
+            var apiKey = _azureOpenAISettings.ApiKey;
 
             AzureOpenAIClient azureClient = new(
                 endpoint,

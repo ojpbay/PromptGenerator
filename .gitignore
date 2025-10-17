@@ -54,3 +54,6 @@ TestResult.xml
 nunit-*.xml
 
 /.vs
+
+# Local configuration files (contain sensitive data like API keys)
+#appsettings.local.json
