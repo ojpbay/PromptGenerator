@@ -125,6 +125,8 @@ namespace PromptContextGenerator
                 if (!string.IsNullOrEmpty(results.Text))
                 {
                     results.Text += "\n\n";
+                    results.Text += "----------------------------------------------------------------------------------------";
+                    results.Text += "\n\n";
                 }
                 results.Text += $"User: {userMessage}\n\nAssistant: {responseText}";
                 
