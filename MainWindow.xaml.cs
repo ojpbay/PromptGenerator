@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows;
 using System.Collections.Generic;
 using System.Windows.Media.Animation;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace PromptContextGenerator
 {
@@ -26,7 +27,8 @@ namespace PromptContextGenerator
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+                //.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
+                .AddUserSecrets<MainWindow>();
             
             _configuration = builder.Build();
             
