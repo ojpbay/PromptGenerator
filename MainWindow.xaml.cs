@@ -27,7 +27,6 @@ namespace PromptContextGenerator
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                //.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
                 .AddUserSecrets<MainWindow>();
             
             _configuration = builder.Build();
